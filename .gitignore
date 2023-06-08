@@ -70,13 +70,10 @@ pickle-email-*.html
 !/tmp/.keep
 
 # TODO Comment out this rule if you are OK with secrets being uploaded to the repo
-<<<<<<< HEAD
-config/initializers/secret_token.rb
-timesheet-project/config/master.key
-=======
+
 **/config/initializers/secret_token.rb
 *.key
->>>>>>> 3cb9df8796e3a81283edca6b87aed05203f35ed4
+
 
 # Only include if you have production secrets in this file, which is no longer a Rails default
 # config/secrets.yml
