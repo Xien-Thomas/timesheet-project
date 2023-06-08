@@ -53,9 +53,9 @@ Temporary Items
 *.rbc
 capybara-*.html
 .rspec
-/db/*.sqlite3
-/db/*.sqlite3-journal
-/db/*.sqlite3-[0-9]*
+**/db/*.sqlite3
+**/db/*.sqlite3-journal
+**/db/*.sqlite3-[0-9]*
 /public/system
 /coverage/
 /spec/tmp
@@ -64,14 +64,14 @@ rerun.txt
 pickle-email-*.html
 
 # Ignore all logfiles and tempfiles.
-/log/*
-/tmp/*
+**/log/*
+**/tmp/*
 !/log/.keep
 !/tmp/.keep
 
 # TODO Comment out this rule if you are OK with secrets being uploaded to the repo
-config/initializers/secret_token.rb
-config/master.key
+**/config/initializers/secret_token.rb
+*.key
 
 # Only include if you have production secrets in this file, which is no longer a Rails default
 # config/secrets.yml
@@ -138,14 +138,14 @@ sketch
 
 ### Ruby ###
 *.gem
-/.config
-/InstalledFiles
-/pkg/
-/spec/reports/
-/spec/examples.txt
-/test/tmp/
-/test/version_tmp/
-/tmp/
+**/.config
+**/InstalledFiles
+**/pkg/
+**/spec/reports/
+**/spec/examples.txt
+**/test/tmp/
+**/test/version_tmp/
+**/tmp/
 
 # Used by dotenv library to load environment variables.
 # .env
