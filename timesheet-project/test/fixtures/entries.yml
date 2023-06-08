@@ -1,0 +1,13 @@
+# Read about fixtures at https://api.rubyonrails.org/classes/ActiveRecord/FixtureSet.html
+
+one:
+  date: 2023-06-08
+  hours: 9.99
+  type: one
+  timesheet: one
+
+two:
+  date: 2023-06-08
+  hours: 9.99
+  type: two
+  timesheet: two
