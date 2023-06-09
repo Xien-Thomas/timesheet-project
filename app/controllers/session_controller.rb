@@ -1,4 +1,7 @@
+require_relative '../../lib/json_web_token'
+
 class SessionController < ApplicationController
+
   def create
     begin
       credentials = JSON.parse(request.body.read)
@@ -17,6 +20,4 @@ class SessionController < ApplicationController
     end
   end
 
-  def destroy
-  end
 end
