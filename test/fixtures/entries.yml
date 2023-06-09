@@ -1,13 +1,13 @@
 # Read about fixtures at https://api.rubyonrails.org/classes/ActiveRecord/FixtureSet.html
 
-one:
+entry1:
   date: 2023-06-08
-  hours: 9.99
-  type: one
-  timesheet: one
+  hours: 8.01
+  type: HoursWorked
+  timesheet: timesheet1
 
-two:
-  date: 2023-06-08
-  hours: 9.99
-  type: two
-  timesheet: two
+entry2:
+  date: 2023-06-07
+  hours: 7.99
+  type: PTO
+  timesheet: timesheet2

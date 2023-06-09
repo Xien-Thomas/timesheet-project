@@ -1,7 +1,7 @@
 Rails.application.routes.draw do
   get 'timesheet/show'
-  get 'session/create'
-  get 'session/destroy'
+  post 'session/create'
+  post 'session/destroy'
   get 'entry/create'
   get 'entry/destroy'
   get 'entry/update'
