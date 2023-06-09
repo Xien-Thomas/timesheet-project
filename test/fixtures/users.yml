@@ -1,6 +1,6 @@
 user1:
   email: 'username1@godsintendedemail.com'
-  password: <%= BCrypt::Password.create('password1') %>
+  password_digest: <%= BCrypt::Password.create('password1') %>
   first_name: 'firstname1'
   last_name: 'lastname1'
   role: employee
@@ -8,7 +8,7 @@ user1:
 
 user2:
   email: 'username2@godsintendedemail.com'
-  password: <%= BCrypt::Password.create('password2') %>
+  password_digest: <%= BCrypt::Password.create('password2') %>
   first_name: 'firstname2'
   last_name: 'lastname2'
   role: employee
@@ -16,7 +16,7 @@ user2:
 
 manager:
   email: 'manager@godsintendedemail.com'
-  password: <%= BCrypt::Password.create('managerpassword') %>
+  password_digest: <%= BCrypt::Password.create('managerpassword') %>
   first_name: 'managerfirstname'
   last_name: 'managerlastname'
   role: manager
