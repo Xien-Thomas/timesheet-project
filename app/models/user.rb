@@ -1,6 +1,6 @@
 class User < ApplicationRecord
-  has_one :role
-  has_one :vendor
+  belongs_to :role
+  belongs_to :vendor, optional: true
   has_secure_password
   
 end

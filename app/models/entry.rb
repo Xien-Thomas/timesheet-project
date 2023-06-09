@@ -1,4 +1,4 @@
 class Entry < ApplicationRecord
-  has_one :type
+  belongs_to :type
   belongs_to :timesheet
 end
