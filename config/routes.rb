@@ -1,16 +1,17 @@
 Rails.application.routes.draw do
   get 'timesheet/show'
   post 'login', to: 'session#create'
-  get 'entry/create'
-  get 'entry/destroy'
-  get 'entry/update'
-  get 'entry/index'
-  get 'user/create'
-  get 'user/update'
-  get 'user/destroy'
-  get 'user/show'
-  get '/users', to:  'user#index'
+  # get 'entry/create'
+  # get 'entry/destroy'
+  # get 'entry/update'
+  # get 'entry/index'
+  # get 'user/create'
+  # get 'user/update'
+  # get 'user/destroy'
+  # get 'user/show'
 
+  get '/users', to:  'user#index'
+  post '/send-message' to: 'user#send_message'
 
   # Define your application routes per the DSL in https://guides.rubyonrails.org/routing.html
 

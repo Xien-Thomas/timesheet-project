@@ -28,4 +28,21 @@ class UserController < ApplicationController
 
     render json: contractors.to_json, status: :ok
   end
+
+  #POST /send-message
+  #Function will first check if user is a client
+  #If user is a client(AOI), then call the send method passing parameters
+  #Input: vendor, body
+  #output: status ok if success
+  def send_message
+    if @current_user.role.name != "Client"
+      return render status: :unauthorized
+    end
+
+    #deliver_later: the controller action can continue without waiting for the send to complete
+    #with: create params for action mailer to use
+    UserMailer.with(vendor: params[:vendor], body: params[:body]).send.deliver_later
+
+    render status: :ok
+  end
 end
