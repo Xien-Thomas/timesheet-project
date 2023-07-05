@@ -3,6 +3,7 @@ Rails.application.routes.draw do
   post 'login', to: 'session#create'
   get 'user/index', to: 'user#index'
   get 'user/index/:vendor', to: 'user#index'
+  get 'user/:user_id', to: 'user#show'
   get 'entry/create'
   get 'entry/destroy'
   get 'entry/update'
