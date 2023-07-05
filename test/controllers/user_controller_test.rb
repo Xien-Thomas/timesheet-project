@@ -10,6 +10,54 @@ class UserControllerTest < ActionDispatch::IntegrationTest
     @manager = users(:manager)
     @manager_token = JWT.encode({ user_id: @manager.id }, Rails.application.secret_key_base, 'HS256')
   end
+  test "user#create should create an employee when you are an manager" do
+    post "/user/create", 
+      headers: { Authorization: @manager_token }, 
+      params: { first_name: 'testing', last_name: 'testing', email: 'testing@example.com', 
+        password: 'uhhhhhhhhhhh', vendor_name: 'Revature', role_name: 'Employee'}, 
+      as: :json
+    assert_response :created
+    created_user = User.where(first_name: 'testing').first
+    assert created_user[:first_name] == 'testing'
+    assert created_user[:last_name] == 'testing'
+    assert created_user[:email] == 'testing@example.com'
+    assert created_user[:role_id] == Role.where(name: 'Employee').first[:id]
+    assert created_user[:vendor_id] == Vendor.where(name: 'revature').first[:id]
+    assert !created_user[:id].nil?
+  end
+  test "user#create should respond with unprocessable_entity if no data is given" do
+    post "/user/create", 
+      headers: { Authorization: @manager_token }
+    assert_response :unprocessable_entity
+  end
+  test "user#create should respond with unprocessable_entity if bad data is given" do
+    post "/user/create", 
+    headers: { Authorization: @manager_token }, 
+    params: { first_name: 'testing', last_name: 'testing', email: 'testing@example.com', 
+      password: 'uhhhhhhhhhhh', vendor_name: 'A Vendor That Doesn\'t Exist', role_name: 'Employee'}, 
+    as: :json
+    assert_response :unprocessable_entity
+  end
+  test "user#create should not create a user when you are an employee" do
+    post "/user/create", 
+      headers: { Authorization: @user1_token }, 
+      params: { first_name: 'testing', last_name: 'testing', email: 'testing@example.com', 
+        password: 'uhhhhhhhhhhh', vendor_name: 'Revature', role_name: 'Employee'}, 
+      as: :json
+    assert_response :unauthorized
+    created_user = User.where(first_name: 'testing').first
+    assert created_user.nil?
+  end
+  test "user#create should not create a non-employee user when you are a manager" do
+    post "/user/create", 
+      headers: { Authorization: @manager_token }, 
+      params: { first_name: 'testing', last_name: 'testing', email: 'testing@example.com', 
+        password: 'uhhhhhhhhhhh', vendor_name: 'Revature', role_name: 'Literally Anything Else'}, 
+      as: :json
+    assert_response :unauthorized
+    created_user = User.where(first_name: 'testing').first
+    assert created_user.nil?
+  end
   test "user#show should show employee when that employee is you" do
     get "/user/#{@user1.id}", headers: { Authorization: @user1_token } 
     assert_response :ok
