@@ -9,6 +9,12 @@ class UserController < ApplicationController
   def destroy
   end
 
+  # This is for viewing individual contractors. 
+  # This will return all information about a contractor with the given user_id.
+  #
+  #   Input: user_id
+  #   Output: first_name, last_name, email, id, vendor_name (can be nil), role_name
+  #
   def show
     if @current_user.role['name'] == 'Employee' && @current_user.id != params[:user_id].to_i
       return render json: nil, status: :unauthorized
