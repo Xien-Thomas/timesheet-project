@@ -1,6 +1,34 @@
 class UserController < ApplicationController
   include Authenticate
+  
+  # This is for creating new users. 
+  # Returns :created on success, :unprocessable_entity on failure, and :unauthorized if you don't have permission.
+  #
+  #   Input: first_name, last_name, password, email, vendor_name (optional), role_name
+  #   Output: nil
+  #
   def create
+    begin
+      if params[:role_name].nil? || params[:first_name].nil? || params[:last_name].nil? || params[:email].nil? || params[:password].nil? 
+        return render json: nil, status: :unprocessable_entity
+      elsif @current_user.role['name'] == 'Employee' || (@current_user.role['name'] == 'Manager' && params[:role_name] != 'Employee')
+        return render json: nil, status: :unauthorized
+      end
+      if User.create!(
+        first_name: params[:first_name], 
+        last_name: params[:last_name], 
+        email: params[:email], 
+        password: params[:password], 
+        vendor_id: params[:vendor_name] ? Vendor.where(name: params[:vendor_name].downcase).first[:id] : nil, 
+        role_id: Role.where(name: params[:role_name]).first[:id]
+      )
+        return render json: {message: "User created successfully"}, status: :created
+      else
+        return render json: nil, status: :unprocessable_entity
+      end
+    rescue ActiveRecord::RecordInvalid, ActiveRecord::RecordNotFound, NoMethodError
+      return render json: nil, status: :unprocessable_entity
+    end
   end
 
   def update
