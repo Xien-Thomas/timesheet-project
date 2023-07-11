@@ -113,4 +113,33 @@ class UserControllerTest < ActionDispatch::IntegrationTest
     get '/user/index', headers: { 'Authorization' => @manager_token}
     assert_equal JSON.parse(response.body).size, 2
   end
+  test "user#destroy should delete an employee when you are an manager" do
+    delete "/user/destroy/#{@user1.id}", 
+      headers: { Authorization: @manager_token }
+    assert_response :ok
+    deleted_user = User.where(id: @user1.id).first
+    assert deleted_user.nil?
+  end
+  
+  test "user#destroy should respond with unprocessable_entity if bad id is given" do
+    delete "/user/destroy/bad_id",
+      headers: { Authorization: @manager_token }
+    assert_response :unprocessable_entity
+  end
+  
+  test "user#destroy should not destroy a user when you are an employee" do
+    delete "/user/destroy/#{@user2.id}", 
+      headers: { Authorization: @user2_token }
+    assert_response :unauthorized
+    destroyed_user = User.where(first_name: @user2.first_name).first
+    assert destroyed_user
+  end
+  test "user#destroy should not delete a non-employee user when you are a manager" do
+    delete "/user/destroy/#{@manager.id}", 
+      headers: { Authorization: @manager_token } 
+    assert_response :unauthorized
+    destroyed_user = User.where(first_name: @manager.first_name).first
+    assert destroyed_user
+  end
 end
+  

@@ -33,8 +33,28 @@ class UserController < ApplicationController
 
   def update
   end
-
+# This is for destroying users. 
+  # This will destroy user from database if current user is not an employee
+  #   Input: user_id
+  #
   def destroy
+    if @current_user.role.name == 'Employee'
+      return render json: nil, status: :unauthorized 
+    end
+    user_to_destroy = User.where(id: params[:user_id]).first
+    if user_to_destroy
+      if @current_user.role.name == 'Admin' || (@current_user.role.name == 'Manager' && user_to_destroy.role.name == 'Employee')
+        if user_to_destroy.destroy
+          return render json: nil, status: :ok
+        else
+          return render json: { message: "Failed to delete user." }, status: 500 
+        end
+      else
+        return render json: nil, status: :unauthorized 
+      end
+    else 
+      return render json: nil, status: :unprocessable_entity
+    end
   end
 
   # This is for viewing individual contractors. 
