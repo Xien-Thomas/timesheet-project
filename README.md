@@ -35,5 +35,5 @@ As an admin:
 
 ## USER MAILER
 
-To send an automated message once AO client is done (in rails): UserMailer.send
+To send an automated message once AO client is done (in rails): UserMailer.with(body: @body, vendor: vendor.id).send
 

@@ -4,12 +4,13 @@ class UserMailer < ApplicationMailer
         subject: "Contractor Timesheet approval"
 
     #definition to send the mail to the email recipients
-    #input: vendor tag and body paragraph
+    #input: vendor id and body paragraph in params
     #output: send email to contractors and recipients
-    def send
+    def send_contract_message
         # attachments['free_book.pdf'] = File.read('path/to/file.pdf')
+        puts params[:vendor]
         @contractor_emails = User.where(vendor: params[:vendor])
-        @vendor_emails = User.where(vendor: params[:vendor],  role: admin)
+        @vendor_emails = User.where(vendor: params[:vendor],  role: 'admin')
         @body = params[:body]
         mail(to: @contractor, 
             bcc: @vendor_emails)

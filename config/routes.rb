@@ -11,7 +11,7 @@ Rails.application.routes.draw do
   # get 'user/show'
 
   get '/users', to:  'user#index'
-  post '/send-message' to: 'user#send_message'
+  post '/send-message', to: 'user#send_message'
 
   # Define your application routes per the DSL in https://guides.rubyonrails.org/routing.html
 
