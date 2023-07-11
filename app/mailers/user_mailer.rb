@@ -1,5 +1,5 @@
 class UserMailer < ApplicationMailer
-    #Set the default from and subject attributes
+    #Set the default FROM and SUBJECT attributes
     default from: "no-reply@aoi.com", 
         subject: "Contractor Timesheet approval"
 
