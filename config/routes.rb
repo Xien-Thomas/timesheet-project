@@ -9,7 +9,7 @@ Rails.application.routes.draw do
   get 'entry/update'
   get 'entry/index'
   post 'user/create', to: 'user#create'
-  get 'user/update'
+  put 'user/update/:user_id', to: 'user#update'
   delete 'user/destroy/:user_id', to: 'user#destroy'
   get 'user/show'
   

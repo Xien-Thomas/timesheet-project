@@ -9,6 +9,8 @@ class UserControllerTest < ActionDispatch::IntegrationTest
     @user2_token = JWT.encode({ user_id: @user2.id }, Rails.application.secret_key_base, 'HS256')
     @manager = users(:manager)
     @manager_token = JWT.encode({ user_id: @manager.id }, Rails.application.secret_key_base, 'HS256')
+    @admin = users(:admin)
+    @admin_token = JWT.encode({ user_id: @admin.id }, Rails.application.secret_key_base, 'HS256')
   end
   test "user#create should create an employee when you are an manager" do
     post "/user/create", 
@@ -140,6 +142,89 @@ class UserControllerTest < ActionDispatch::IntegrationTest
     assert_response :unauthorized
     destroyed_user = User.where(first_name: @manager.first_name).first
     assert destroyed_user
+  end
+  test "user#update should update an employee when you are an admin" do
+    user1_id = @user1.id
+    put "/user/update/#{user1_id}", 
+      headers: { Authorization: @admin_token }, 
+      params: { first_name: 'updated', last_name: 'updated', email: 'updated@example.com', 
+        password: 'uhhhhhhhhhhh2', vendor_name: 'null', role_name: 'Manager', id: 0 }, 
+      as: :json
+    assert_response :ok
+    updated_user = User.find_by_id(user1_id)
+    assert updated_user[:first_name] == 'updated'
+    assert updated_user[:last_name] == 'updated'
+    assert updated_user[:email] == 'updated@example.com'
+    assert updated_user[:vendor_id].nil?
+    assert updated_user.is_a_manager?
+    post '/login', params: { email: 'updated@example.com', password: 'uhhhhhhhhhhh2' }, as: :json
+    assert_response :created
+  end
+  test "user#update should respond with ok but make no changes if no data is given" do
+    put "/user/update/#{@user1.id}", 
+      headers: { Authorization: @admin_token }
+    assert_response :ok
+  end
+  test "user#update should respond with ok but make no changes if bad data is given" do
+    put "/user/update/#{@user1.id}", 
+    headers: { Authorization: @admin_token }, 
+    params: { pizza: true }, 
+    as: :json
+    assert_response :ok
+  end
+  test "user#update should not update a user when you are a manager" do
+    user1_id = @user1.id
+    put "/user/update/#{@user1.id}", 
+      headers: { Authorization: @manager_token }, 
+      params: { first_name: 'updated', last_name: 'updated', email: 'updated@example.com', 
+        password: 'uhhhhhhhhhhh2', vendor_name: nil, role_name: 'Manager', id: 0 }, 
+      as: :json
+    assert_response :unauthorized
+    updated_user = User.find_by_id(user1_id)
+    assert updated_user[:first_name] != 'updated'
+    assert updated_user[:last_name] != 'updated'
+    assert updated_user[:email] != 'updated@example.com'
+    assert !updated_user[:vendor_id].nil?
+    assert updated_user.is_not_a_manager?
+    post '/login', params: { email: 'updated@example.com', password: 'uhhhhhhhhhhh2' }, as: :json
+    assert_response :unauthorized
+  end
+  test "user#update should allow anyone to update their own password" do
+    put "/user/update/#{@user2.id}", 
+      headers: { Authorization: @user2_token }, 
+      params: { first_name: 'updated', last_name: 'updated', email: 'updated@example.com', 
+        password: 'uhhhhhhhhhhh2', vendor_name: nil, role_name: 'Manager', id: 0 }, 
+      as: :json
+    assert_response :ok
+    updated_user = User.find_by_id(@user2.id)
+    assert updated_user[:first_name] != 'updated'
+    assert updated_user[:last_name] != 'updated'
+    assert updated_user[:email] != 'updated@example.com'
+    assert !updated_user[:vendor_id].nil?
+    assert updated_user.is_not_a_manager?
+    post '/login', params: { email: @user2.email, password: 'uhhhhhhhhhhh2' }, as: :json
+    assert_response :created
+    put "/user/update/#{@manager.id}", 
+      headers: { Authorization: @manager_token }, 
+      params: { first_name: 'updated', last_name: 'updated', email: 'updated@example.com', 
+        password: 'uhhhhhhhhhhh2', vendor_name: nil, role_name: 'Admin', id: 0 }, 
+      as: :json
+    assert_response :ok
+    updated_user = User.find_by_id(@manager.id)
+    assert updated_user[:first_name] != 'updated'
+    assert updated_user[:last_name] != 'updated'
+    assert updated_user[:email] != 'updated@example.com'
+    assert updated_user[:vendor_id].nil?
+    assert updated_user.is_not_an_admin?
+    post '/login', params: { email: @manager.email, password: 'uhhhhhhhhhhh2' }, as: :json
+    assert_response :created
+    put "/user/update/#{@admin.id}", 
+      headers: { Authorization: @admin_token }, 
+      params: { password: 'uhhhhhhhhhhh2' }, 
+      as: :json
+    assert_response :ok
+    post '/login', params: { email: @admin.email, password: 'uhhhhhhhhhhh2' }, as: :json
+    assert_response :created
   end
 end
   
