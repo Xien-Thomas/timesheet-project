@@ -20,3 +20,10 @@ manager:
   first_name: 'managerfirstname'
   last_name: 'managerlastname'
   role: manager
+
+admin:
+  email: 'admin@godsintendedemail.com'
+  password_digest: <%= BCrypt::Password.create('adminpassword') %>
+  first_name: 'adminfirstname'
+  last_name: 'adminlastname'
+  role: admin
