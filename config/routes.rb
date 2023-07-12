@@ -9,9 +9,10 @@ Rails.application.routes.draw do
   get 'entry/update'
   get 'entry/index'
   post 'user/create', to: 'user#create'
-  get 'user/update'
-  get 'user/destroy'
+  put 'user/update/:user_id', to: 'user#update'
+  delete 'user/destroy/:user_id', to: 'user#destroy'
   get 'user/show'
+  
   # Define your application routes per the DSL in https://guides.rubyonrails.org/routing.html
 
   # Defines the root path route ("/")
