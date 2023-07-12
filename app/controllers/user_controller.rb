@@ -11,7 +11,7 @@ class UserController < ApplicationController
     begin
       if params[:role_name].nil? || params[:first_name].nil? || params[:last_name].nil? || params[:email].nil? || params[:password].nil? 
         return render json: nil, status: :unprocessable_entity
-      elsif @current_user.role['name'] == 'Employee' || (@current_user.role['name'] == 'Manager' && params[:role_name] != 'Employee')
+      elsif @current_user.is_an_employee? || (@current_user.is_a_manager? && params[:role_name] != 'Employee')
         return render json: nil, status: :unauthorized
       end
       if User.create!(
@@ -22,7 +22,7 @@ class UserController < ApplicationController
         vendor_id: params[:vendor_name] ? Vendor.where(name: params[:vendor_name].downcase).first[:id] : nil, 
         role_id: Role.where(name: params[:role_name]).first[:id]
       )
-        return render json: {message: "User created successfully"}, status: :created
+        return render json: { message: "User created successfully" }, status: :created
       else
         return render json: nil, status: :unprocessable_entity
       end
@@ -33,17 +33,20 @@ class UserController < ApplicationController
 
   def update
   end
-# This is for destroying users. 
+  
+  # This is for destroying users. 
   # This will destroy user from database if current user is not an employee
+  #
   #   Input: user_id
+  #   Output: nil
   #
   def destroy
-    if @current_user.role.name == 'Employee'
+    if @current_user.is_an_employee?
       return render json: nil, status: :unauthorized 
     end
-    user_to_destroy = User.where(id: params[:user_id]).first
+    user_to_destroy = User.find_by_id(params[:user_id])
     if user_to_destroy
-      if @current_user.role.name == 'Admin' || (@current_user.role.name == 'Manager' && user_to_destroy.role.name == 'Employee')
+      if @current_user.is_an_admin? || (@current_user.is_a_manager? && user_to_destroy.is_an_employee?)
         if user_to_destroy.destroy
           return render json: nil, status: :ok
         else
@@ -64,7 +67,7 @@ class UserController < ApplicationController
   #   Output: first_name, last_name, email, id, vendor_name (can be nil), role_name
   #
   def show
-    if @current_user.role['name'] == 'Employee' && @current_user.id != params[:user_id].to_i
+    if @current_user.is_an_employee? && @current_user.id != params[:user_id].to_i
       return render json: nil, status: :unauthorized
     end
     begin 
@@ -86,7 +89,7 @@ class UserController < ApplicationController
   #   Output: List of contractors
   #
   def index
-    if @current_user.role["name"] == 'Employee'
+    if @current_user.is_an_employee?
       # TODO: redirect to the proper page for an Employee
       return render json: nil, status: :unauthorized
     end
