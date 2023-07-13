@@ -1,5 +1,5 @@
 Rails.application.routes.draw do
-  get 'vendor/create'
+  post 'vendor/create', to: 'vendor#create'
   get 'timesheet/show'
   post 'login', to: 'session#create'
   get 'user/index', to: 'user#index'
