@@ -1,20 +1,10 @@
 require "test_helper"
+require_relative '../set_up_test.rb'
 
 class TimesheetControllerTest < ActionDispatch::IntegrationTest
-  # test "should get show" do
-  #   get timesheet_show_url
-  #   assert_response :success
-  # end
-  setup do
-    @user1 = users(:user1)
-    @user1_token = JWT.encode({ user_id: @user1.id }, Rails.application.secret_key_base, 'HS256')
-    @entry1 = entries(:entry1)
-    @user2 = users(:user2)
-    @user2_token = JWT.encode({ user_id: @user2.id }, Rails.application.secret_key_base, 'HS256')
-    @entry2 = entries(:entry2)
-    @manager = users(:manager)
-    @manager_token = JWT.encode({ user_id: @manager.id }, Rails.application.secret_key_base, 'HS256')
-  end
+  extend SetUpTest
+  set_up_test
+  
   test "should respond with a timesheet with exactly 1 entry in it" do
     get '/timesheet/show', headers: { 'Authorization' => @user1_token }
     assert_equal JSON.parse(response.body).length, 1

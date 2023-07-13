@@ -1,17 +1,11 @@
 require "test_helper"
 require_relative "../../lib/json_web_token.rb"
+require_relative '../set_up_test.rb'
 
 class UserControllerTest < ActionDispatch::IntegrationTest
-  setup do
-    @user1 = users(:user1)
-    @user1_token = JWT.encode({ user_id: @user1.id }, Rails.application.secret_key_base, 'HS256')
-    @user2 = users(:user2)
-    @user2_token = JWT.encode({ user_id: @user2.id }, Rails.application.secret_key_base, 'HS256')
-    @manager = users(:manager)
-    @manager_token = JWT.encode({ user_id: @manager.id }, Rails.application.secret_key_base, 'HS256')
-    @admin = users(:admin)
-    @admin_token = JWT.encode({ user_id: @admin.id }, Rails.application.secret_key_base, 'HS256')
-  end
+  extend SetUpTest
+  set_up_test
+
   test "user#create should create an employee when you are an manager" do
     post "/user/create", 
       headers: { Authorization: @manager_token }, 
