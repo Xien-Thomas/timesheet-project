@@ -11,6 +11,9 @@ module SetUpTest
             @admin_token = JWT.encode({ user_id: @admin.id }, Rails.application.secret_key_base, 'HS256')
             @entry1 = entries(:entry1)
             @entry2 = entries(:entry2)
+            @entry3 = entries(:entry3)
+            @vendor1 = vendors(:vendor1)
+            @vendor2 = vendors(:vendor2)
         end
 
     end

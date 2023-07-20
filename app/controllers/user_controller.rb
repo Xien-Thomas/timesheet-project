@@ -1,141 +1,161 @@
-class UserController < ApplicationController
-  include Authenticate
-  
+class UserController < ApiBaseController
   # This is for creating new users. 
-  # Returns :created on success, :unprocessable_entity on failure, and :unauthorized if you don't have permission.
+  # 
+  # It expects json that looks like this:
   #
-  #   Input: first_name, last_name, password, email, vendor_name (optional), role_name
-  #   Output: nil
+  # {
+  #   "user": {
+  #     "first_name": "Chino",
+  #     "last_name": "Kafuu",
+  #     "email": "email@example.com",
+  #     "password": "thisisapassword",
+  #     "role": "employee",
+  #     "vendor_id": 1
+  #   }
+  # }
   #
   def create
-    begin
-      if params[:role_name].nil? || params[:first_name].nil? || params[:last_name].nil? || params[:email].nil? || params[:password].nil? 
-        return render json: nil, status: :unprocessable_entity
-      elsif @current_user.is_an_employee? || (@current_user.is_a_manager? && params[:role_name] != 'Employee')
-        return render json: nil, status: :unauthorized
-      end
-      if User.create(
-        first_name: params[:first_name], 
-        last_name: params[:last_name], 
-        email: params[:email], 
-        password: params[:password], 
-        vendor_id: params[:vendor_name] ? Vendor.find_by_name(params[:vendor_name]).id : nil, 
-        role_id: Role.find_by_name(params[:role_name]).id
-      )
-        return render json: { message: "User created successfully" }, status: :created
-      else
-        return render json: nil, status: :unprocessable_entity
-      end
-    rescue ActiveRecord::RecordInvalid, ActiveRecord::RecordNotFound, NoMethodError
-      return render json: nil, status: :unprocessable_entity
+    return reject_unauthorized_request unless @current_user.admin?
+
+    user_to_create = User.new user_params
+    if user_to_create.save
+      Timesheet.create(user_id: user_to_create.id)
+      return render json: { message: "User successfully created." }, status: :created
+    else
+      return render json: { message: user_to_create.errors.full_messages.join(', ') }, status: :unprocessable_entity
     end
   end
 
   # This is for updating users. 
-  # Returns :ok on success, :unprocessable_entity on failure, and :unauthorized if you don't have permission.
+  # 
+  # Employees can update their password.
+  # Admins can update everything.
+  # 
+  # It expects json that looks like this:
   #
-  #   Input (all optional): first_name, last_name, password, email, vendor_name, role_name
-  #   Output: nil
+  # {
+  #   "user": {
+  #     "first_name": "Chino",
+  #     "last_name": "Kafuu",
+  #     "email": "email@example.com",
+  #     "password": "thisisapassword",
+  #     "role": "employee",
+  #     "vendor_id": 1
+  #   }
+  # }
   #
   def update
-    if @current_user.is_an_admin?
-      permitted_params = params.permit(:first_name, :last_name, :email, :password)
-      begin
-        permitted_params[:role_id] = Role.find_by_name(params[:role_name]).id if params[:role_name]
-        if params[:vendor_name]
-          if params[:vendor_name] == 'null'
-            permitted_params[:vendor_id] = nil
-          else
-            permitted_params[:vendor_id] = Vendor.find_by_name(params[:vendor_name]).id
-          end
-        end
-      rescue NoMethodError
-        return render json: { message: 'An error has occured. The specified vendor or role does not exist. The user has not been updated.' }, status: :unprocessable_entity
-      end
-    elsif @current_user.id.to_s == params[:user_id]
-      permitted_params = params.permit(:password)
-    else
-      return render json: { message: "You are not authorized to update this user" }, status: :unauthorized
-    end
-    user_to_update = User.find_by_id(params[:user_id])
-    if user_to_update
-      if user_to_update.update(permitted_params)
-        return render json: nil, status: :ok
+    return reject_unauthorized_request unless @current_user.admin? || current_user_matches_params
+
+    user_to_update = User.find params[:id]
+    if @current_user.admin?
+      if user_to_update.update user_params
+        return render json: { message: "User successfully updated." }, status: :ok
       else
-        return render json: { message: 'An error has occured. The user has not been updated.' }, status: :unprocessable_entity
+        return render json: { message: user_to_update.errors.full_messages.join(', ') }, status: :unprocessable_entity
       end
     else
-      return render json: { message: 'The requested user does not exist.' }, status: :unprocessable_entity
+      if user_to_update.update user_restricted_params
+        return render json: { message: "User successfully updated." }, status: :ok
+      else
+        return render json: { message: user_to_update.errors.full_messages.join(', ') }, status: :unprocessable_entity
+      end
     end
   end
 
   # This is for destroying users. 
-  # This will destroy user from database if current user is not an employee
-  #
-  #   Input: user_id
-  #   Output: nil
+  # Only admins are authorized to use this method.
   #
   def destroy
-    if @current_user.is_an_employee?
-      return render json: nil, status: :unauthorized 
-    end
-    user_to_destroy = User.find_by_id(params[:user_id])
+    return reject_unauthorized_request unless @current_user.admin?
+
+    user_to_destroy = User.find params[:id]
     if user_to_destroy
-      if @current_user.is_an_admin? || (@current_user.is_a_manager? && user_to_destroy.is_an_employee?)
-        if user_to_destroy.destroy
-          return render json: nil, status: :ok
-        else
-          return render json: { message: "Failed to delete user." }, status: 500 
-        end
+      if user_to_destroy.destroy
+        return render json: { message: "User successfully deleted."}, status: :ok
       else
-        return render json: nil, status: :unauthorized 
+        return render json: { message: user_to_destroy.errors.full_messages.join(', ') }, status: 500 
       end
     else 
-      return render json: nil, status: :unprocessable_entity
+      return render json: { message: "Invalid user." }, status: :unprocessable_entity
     end
   end
 
   # This is for viewing individual contractors. 
-  # This will return all information about a contractor with the given user_id.
+  # 
+  # It returns json that looks like this:
   #
-  #   Input: user_id
-  #   Output: first_name, last_name, email, id, vendor_name (can be nil), role_name
+  # {
+  #   "user": {
+  #     "id": 1,
+  #     "first_name": "Test1",
+  #     "last_name": "User1",
+  #     "email": "test1@example.com",
+  #     "vendor_id": 21,
+  #     "role": "employee"
+  #   }
+  # }
   #
   def show
-    if @current_user.is_an_employee? && @current_user.id != params[:user_id].to_i
-      return render json: nil, status: :unauthorized
-    end
+    return reject_unauthorized_request if @current_user.employee? && !current_user_matches_params
+
     begin 
-      if User.find_by_id(params[:user_id]).vendor.nil?
-        desired_user = User.select('users.*, roles.name as role_name').joins(:role).where(id: params[:user_id]).first
+      if User.find(params[:id]).vendor.nil?
+        desired_user = User.find params[:id]
       else
-        desired_user = User.select('users.*, vendors.name as vendor_name, roles.name as role_name').joins(:vendor, :role).where(id: params[:user_id]).first
+        desired_user = User.joins(:vendor).find(params[:id])
       end
-    rescue NoMethodError
-      return render json: nil, status: :unprocessable_entity
+    rescue NoMethodError, ActiveRecord::RecordNotFound
+      return render json: { message: "User not found." }, status: :unprocessable_entity
     end
-    return render json: desired_user.to_json(only: [:first_name, :last_name, :email, :id, :vendor_name, :role_name]), status: :ok
+    return render json: desired_user.to_json(only: [:first_name, :last_name, :email, :id, :vendor_id, :role]), status: :ok
   end
 
-  # This is the basis of "View Contractors". This will return all contractors with the given vendor
-  # If no vendor is specified, it will return all contractors.
+
+  # This is for viewing all contractors. 
+  # You may specify a vendor_id to filter results. (ex: /user?vendor_id=1) 
   #
-  #   Input: Vendor name (optional)
-  #   Output: List of contractors
+  # It returns json that looks like this:
+  #
+  # [
+  #   {
+  #     "user": {
+  #       "id": 1,
+  #       "first_name": "Test1",
+  #       "last_name": "User1"
+  #     }
+  #   },
+  #   {
+  #     "user": {
+  #       "id": 2,
+  #       "first_name": "Test2",
+  #       "last_name": "User2"
+  #     }
+  #   }
+  # ]
   #
   def index
-    if @current_user.is_an_employee?
-      # TODO: redirect to the proper page for an Employee
-      return render json: nil, status: :unauthorized
-    end
+    return reject_unauthorized_request if @current_user.employee?
+
     # If no vendor was specified, return all employees
     # Otherwise, return all employees belonging to that vendor
-    if params[:vendor].nil? 
-      contractors = User.where(role_id: Role.find_by_name('Employee').id)
+    if params[:vendor_id].nil? 
+      contractors = User.where role: :employee
       render json: contractors.to_json(only: [:first_name, :last_name, :id])
     else
-      contractors = User.where(vendor_id: Vendor.find_by_name(params[:vendor]).id)
+      contractors = User.where vendor_id: params[:vendor_id]
       render json: contractors.to_json(only: [:first_name, :last_name, :id])
     end
   end
+
+  private
+
+  def user_params
+    params.require(:user).permit(:first_name, :last_name, :password, :email, :role, :vendor_id)
+  end
+  
+  def user_restricted_params
+    params.require(:user).permit(:password)
+  end
+
 end
