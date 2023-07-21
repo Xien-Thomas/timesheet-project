@@ -27,5 +27,21 @@ module TimesheetProject
     #
     # config.time_zone = "Central Time (US & Canada)"
     # config.eager_load_paths << Rails.root.join("extras")
+    
+    # Includes the root when using "as_json". For example, when returning a user, it will look like:
+    #
+    # "user": {
+    #   "first_name": "example"
+    # }
+    #
+    # instead of 
+    #
+    # { 
+    # "first_name": "example" 
+    # }
+    # 
+    # which means that our expected output will match our expected input. Nice and clean, right?
+
+    config.active_record.include_root_in_json = true
   end
 end
