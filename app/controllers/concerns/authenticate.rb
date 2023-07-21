@@ -28,4 +28,16 @@ module Authenticate
   def token
     request.headers['Authorization'].split(' ').last if request.headers['Authorization'].present?
   end
+
+  def reject_unauthorized_request(message: "You are not authorized to perform this action.")
+    render json: { message: message }, status: :unauthorized
+  end
+  
+  def current_user_matches(id)
+    @current_user.id == id.to_i
+  end
+  
+  def current_user_matches_params
+    @current_user.id == params[:id].to_i
+  end
 end

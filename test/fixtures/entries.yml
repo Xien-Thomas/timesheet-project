@@ -3,11 +3,20 @@
 entry1:
   date: 2023-06-08
   hours: 8.01
-  type: HoursWorked
+  entry_type: 0
   timesheet: timesheet1
+  status: 0
 
 entry2:
   date: 2023-06-07
   hours: 7.99
-  type: PTO
+  entry_type: 1
   timesheet: timesheet2
+  status: 0
+
+entry3:
+  date: 2023-06-09
+  hours: 8
+  entry_type: 0
+  timesheet: timesheet1
+  status: 0

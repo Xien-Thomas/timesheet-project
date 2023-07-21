@@ -25,14 +25,14 @@ class SessionControllerTest < ActionDispatch::IntegrationTest
   end
 
   test 'should not authenticate when token is missing' do
-    get '/timesheet/show'
+    get '/timesheet'
     assert_response :unauthorized
   end
 
   test 'should not authenticate when token is expired' do
     token = JWT.encode({ user_id: @user1.id, exp: 1.seconds.from_now.to_i }, Rails.application.secret_key_base, 'HS256')
     sleep(2)
-    get '/timesheet/show', headers: { 'Authorization' => token }, as: :json
+    get '/timesheet', headers: { 'Authorization' => token }, as: :json
     assert_response :unauthorized
   end
 
