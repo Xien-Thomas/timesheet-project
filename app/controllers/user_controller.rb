@@ -137,8 +137,6 @@ class UserController < ApiBaseController
   def index
     return reject_unauthorized_request if @current_user.employee?
 
-    # If no vendor was specified, return all employees
-    # Otherwise, return all employees belonging to that vendor
     if params[:vendor_id].nil? 
       contractors = User.where role: :employee
       render json: contractors.to_json(only: [:first_name, :last_name, :id])
@@ -146,6 +144,25 @@ class UserController < ApiBaseController
       contractors = User.where vendor_id: params[:vendor_id]
       render json: contractors.to_json(only: [:first_name, :last_name, :id])
     end
+  end
+
+  # POST /send-message
+  # Function will first check if user is a client
+  # If user is a client(AOI), then call the send method passing parameters
+  # 
+  # Input: vendor, body
+  # Output: status ok if success
+  #
+  def send_message
+    if @current_user.role.name != "Client"
+      return render status: :unauthorized
+    end
+
+    #deliver_later: the controller action can continue without waiting for the send to complete
+    #with: create params for action mailer to use
+    UserMailer.with(vendor: params[:vendor], body: params[:body]).send.deliver_later
+
+    render status: :ok
   end
 
   private

@@ -6,6 +6,7 @@ Rails.application.routes.draw do
   get 'entry/destroy'
   get 'entry/update'
   get 'entry/index'
+  post '/send-message', to: 'user#send_message'
   # get 'user/index', to: 'user#index'
   # get 'user/:user_id', to: 'user#show'
   # post 'user/create', to: 'user#create'

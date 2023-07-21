@@ -33,3 +33,7 @@ As an admin:
 	...I want to add a contractor to a vendor 
 	...I want to make a vendor tag 
 
+## USER MAILER
+
+To send an automated message once AO client is done (in rails): UserMailer.with(body: @body, vendor: vendor.id).send
+
