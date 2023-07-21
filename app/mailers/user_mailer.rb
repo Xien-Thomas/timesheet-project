@@ -8,7 +8,6 @@ class UserMailer < ApplicationMailer
     #output: send email to contractors and recipients
     def send_contract_message
         # attachments['free_book.pdf'] = File.read('path/to/file.pdf')
-        puts params[:vendor]
         @contractor_emails = User.where(vendor: params[:vendor])
         @vendor_emails = User.where(vendor: params[:vendor],  role: 'admin')
         @body = params[:body]

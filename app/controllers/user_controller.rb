@@ -19,7 +19,7 @@ class UserController < ApiBaseController
 
     user_to_create = User.new user_params
     if user_to_create.save
-      Timesheet.create(user_id: user_to_create.id)
+      Timesheet.create(user_id: user_to_create.id) if user_to_create.employee?
       return render json: { message: "User successfully created." }, status: :created
     else
       return render json: { message: user_to_create.errors.full_messages.join(', ') }, status: :unprocessable_entity
@@ -70,14 +70,10 @@ class UserController < ApiBaseController
     return reject_unauthorized_request unless @current_user.admin?
 
     user_to_destroy = User.find params[:id]
-    if user_to_destroy
-      if user_to_destroy.destroy
-        return render json: { message: "User successfully deleted."}, status: :ok
-      else
-        return render json: { message: user_to_destroy.errors.full_messages.join(', ') }, status: 500 
-      end
-    else 
-      return render json: { message: "Invalid user." }, status: :unprocessable_entity
+    if user_to_destroy.destroy
+      return render json: { message: "User successfully deleted."}, status: :ok
+    else
+      return render json: { message: user_to_destroy.errors.full_messages.join(', ') }, status: 500 
     end
   end
 
@@ -99,16 +95,8 @@ class UserController < ApiBaseController
   def show
     return reject_unauthorized_request if @current_user.employee? && !current_user_matches_params
 
-    begin 
-      if User.find(params[:id]).vendor.nil?
-        desired_user = User.find params[:id]
-      else
-        desired_user = User.joins(:vendor).find(params[:id])
-      end
-    rescue NoMethodError, ActiveRecord::RecordNotFound
-      return render json: { message: "User not found." }, status: :unprocessable_entity
-    end
-    return render json: desired_user.to_json(only: [:first_name, :last_name, :email, :id, :vendor_id, :role]), status: :ok
+    desired_user = User.find params[:id]
+    render json: desired_user.to_json(only: [:first_name, :last_name, :email, :id, :vendor_id, :role]), status: :ok
   end
 
 
@@ -137,13 +125,12 @@ class UserController < ApiBaseController
   def index
     return reject_unauthorized_request if @current_user.employee?
 
-    if params[:vendor_id].nil? 
-      contractors = User.where role: :employee
-      render json: contractors.to_json(only: [:first_name, :last_name, :id])
+    if params[:vendor_id]
+      contractors = User.where vendor_id: params[:vendor_id] 
     else
-      contractors = User.where vendor_id: params[:vendor_id]
-      render json: contractors.to_json(only: [:first_name, :last_name, :id])
+      contractors = User.where role: :employee
     end
+    render json: contractors.to_json(only: [:first_name, :last_name, :id])
   end
 
   # POST /send-message
@@ -154,7 +141,7 @@ class UserController < ApiBaseController
   # Output: status ok if success
   #
   def send_message
-    if @current_user.role.name != "Client"
+    if @current_user.employee? 
       return render status: :unauthorized
     end
 
